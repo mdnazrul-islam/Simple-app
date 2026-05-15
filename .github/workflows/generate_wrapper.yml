@@ -13,27 +13,23 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      - name: Generate Wrapper (Isolated Mode)
+      - name: Download Wrapper Files Directly
         run: |
-          # ১. সাময়িকভাবে প্রজেক্ট ফাইলগুলো লুকিয়ে ফেলা (যাতে গ্র্যাডল এরর না দেয়)
-          if [ -f settings.gradle ]; then mv settings.gradle settings.gradle.bak; fi
-          if [ -f build.gradle ]; then mv build.gradle build.gradle.bak; fi
+          # ১. ফোল্ডার তৈরি
+          mkdir -p gradle/wrapper
 
-          # ২. এখন গ্র্যাডল ফাইলগুলো তৈরি করা (এখন কোনো বাধা নেই)
-          gradle wrapper --gradle-version 8.0
+          # ২. গ্র্যাডল অফিশিয়াল সাইট থেকে সরাসরি বাইনারি ফাইলগুলো ডাউনলোড করা
+          # আমরা ভার্সন ৮.০ ব্যবহার করছি
+          curl -L https://github.com/gradle/gradle/raw/v8.0.0/gradle/wrapper/gradle-wrapper.jar -o gradle/wrapper/gradle-wrapper.jar
+          curl -L https://github.com/gradle/gradle/raw/v8.0.0/gradle/wrapper/gradle-wrapper.properties -o gradle/wrapper/gradle-wrapper.properties
+          curl -L https://github.com/gradle/gradle/raw/v8.0.0/gradlew -o gradlew
+          curl -L https://github.com/gradle/gradle/raw/v8.0.0/gradlew.bat -o gradlew.bat
 
-          # ৩. লুকিয়ে ফেলা ফাইলগুলো আবার আগের জায়গায় ফিরিয়ে আনা
-          if [ -f settings.gradle.bak ]; then mv settings.gradle.bak settings.gradle; fi
-          if [ -f build.gradle.bak ]; then mv build.gradle.bak build.gradle; fi
+          # ৩. পারমিশন সেট করা
+          chmod +x gradlew
 
       - name: Commit and Push
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Fix: Force add Gradle Wrapper"
+          commit_message: "Add Gradle Wrapper via direct download"
           file_pattern: "gradlew gradlew.bat gradle/wrapper/*"

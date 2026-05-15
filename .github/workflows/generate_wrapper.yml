@@ -1,13 +1,13 @@
 name: Generate Gradle Wrapper
 
 on:
-  workflow_dispatch: # এটি দিলে আপনি ম্যানুয়ালি বাটন চেপে রান করতে পারবেন
+  workflow_dispatch:
 
 jobs:
-  build:
+  generate:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # ফাইলগুলো সেভ করার অনুমতি দিচ্ছে
+      contents: write
 
     steps:
       - name: Checkout Code
@@ -19,12 +19,23 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Generate Wrapper
-        # এই কমান্ডটিই .jar এবং gradlew ফাইল তৈরি করবে
-        run: gradle wrapper --gradle-version 8.0
+      - name: Generate Wrapper (Clean Mode)
+        # এখানে আমরা একটি ফাঁকা ফোল্ডারে wrapper তৈরি করে তারপর মেইন ফোল্ডারে কপি করছি
+        # যাতে প্রজেক্টের ভুল ফাইলের কারণে গ্র্যাডল আটকে না যায়
+        run: |
+          mkdir temp_wrapper
+          cd temp_wrapper
+          gradle wrapper --gradle-version 8.0
+          mv gradlew ../
+          mv gradlew.bat ../
+          mkdir -p ../gradle/wrapper
+          mv gradle/wrapper/gradle-wrapper.jar ../gradle/wrapper/
+          mv gradle/wrapper/gradle-wrapper.properties ../gradle/wrapper/
+          cd ..
+          rm -rf temp_wrapper
 
       - name: Commit and Push
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Add Gradle Wrapper files"
+          commit_message: "Fix: Add Gradle Wrapper in clean mode"
           file_pattern: "gradlew gradlew.bat gradle/wrapper/*"

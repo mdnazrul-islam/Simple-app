@@ -1,0 +1,30 @@
+name: Generate Gradle Wrapper
+
+on:
+  workflow_dispatch: # এটি দিলে আপনি ম্যানুয়ালি বাটন চেপে রান করতে পারবেন
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # ফাইলগুলো সেভ করার অনুমতি দিচ্ছে
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Generate Wrapper
+        # এই কমান্ডটিই .jar এবং gradlew ফাইল তৈরি করবে
+        run: gradle wrapper --gradle-version 8.0
+
+      - name: Commit and Push
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Add Gradle Wrapper files"
+          file_pattern: "gradlew gradlew.bat gradle/wrapper/*"

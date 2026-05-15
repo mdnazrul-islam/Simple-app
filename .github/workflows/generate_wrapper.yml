@@ -19,23 +19,21 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Generate Wrapper (Clean Mode)
-        # এখানে আমরা একটি ফাঁকা ফোল্ডারে wrapper তৈরি করে তারপর মেইন ফোল্ডারে কপি করছি
-        # যাতে প্রজেক্টের ভুল ফাইলের কারণে গ্র্যাডল আটকে না যায়
+      - name: Generate Wrapper (Isolated Mode)
         run: |
-          mkdir temp_wrapper
-          cd temp_wrapper
+          # ১. সাময়িকভাবে প্রজেক্ট ফাইলগুলো লুকিয়ে ফেলা (যাতে গ্র্যাডল এরর না দেয়)
+          if [ -f settings.gradle ]; then mv settings.gradle settings.gradle.bak; fi
+          if [ -f build.gradle ]; then mv build.gradle build.gradle.bak; fi
+
+          # ২. এখন গ্র্যাডল ফাইলগুলো তৈরি করা (এখন কোনো বাধা নেই)
           gradle wrapper --gradle-version 8.0
-          mv gradlew ../
-          mv gradlew.bat ../
-          mkdir -p ../gradle/wrapper
-          mv gradle/wrapper/gradle-wrapper.jar ../gradle/wrapper/
-          mv gradle/wrapper/gradle-wrapper.properties ../gradle/wrapper/
-          cd ..
-          rm -rf temp_wrapper
+
+          # ৩. লুকিয়ে ফেলা ফাইলগুলো আবার আগের জায়গায় ফিরিয়ে আনা
+          if [ -f settings.gradle.bak ]; then mv settings.gradle.bak settings.gradle; fi
+          if [ -f build.gradle.bak ]; then mv build.gradle.bak build.gradle; fi
 
       - name: Commit and Push
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Fix: Add Gradle Wrapper in clean mode"
+          commit_message: "Fix: Force add Gradle Wrapper"
           file_pattern: "gradlew gradlew.bat gradle/wrapper/*"
